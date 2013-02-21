@@ -67,7 +67,7 @@ public class EascService extends ServiceMBeanSupport implements EascServiceMBean
 		final Class javaProxyClass = java.lang.reflect.Proxy.class;
 		final Invokeable inv = new Invokeable<String, Object>() {
 			public String invoke(Object p, Object arg) throws Exception {
-				ctx.objects.put(p.hashCode(), new WeakReference(p));
+				//ctx.objects.put(p.hashCode(), new WeakReference(p));
 
 				// Find out the correct interface
 				Class ejbInterface = null;
