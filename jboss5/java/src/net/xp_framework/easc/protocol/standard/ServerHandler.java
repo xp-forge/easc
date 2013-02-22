@@ -61,7 +61,7 @@ abstract public class ServerHandler implements Handler {
         // for this client store all lookups as strong references within this functions scope
         // the weak references stored in the context will be used to provide the same lookup for multiple clients
         // however if no client holds a lookup the weak references are subject to be garbage collected
-        HashMap<Integer, Object> strongReferences= new HashMap<Integer, Object>(); 
+        HashMap<Integer, Object> serviceObjects= new HashMap<Integer, Object>(); 
         while (!done) {
             try {
                 Header requestHeader= Header.readFrom(in);
@@ -84,27 +84,31 @@ abstract public class ServerHandler implements Handler {
                         // don't like this, since the caching actually should be done completely within the LookupDelegate
                         // but we don't have a suitable scope for strong references there...
                         // Maybe we would need a HandlerContext, created in the HandlerThread and passed over to the Delegates?
-                    	// That change would be to large for now I think.
+                        // That change would be to large for now I think.
 
-                    	Object delegateInvoke= delegate.invoke(ctx);
-                    	Integer delegateInvokeKey= delegateInvoke.hashCode();
+                        Object delegateInvoke= delegate.invoke(ctx);
+                        Integer delegateInvokeKey= delegateInvoke.hashCode();
 
-                    	Object oldDelegateInvoke= null;
-                		WeakReference cachedReference= ctx.objects.get(delegateInvokeKey);
-                		if (cachedReference != null) {
-                			oldDelegateInvoke= cachedReference.get();
-                		}
-                    	if (oldDelegateInvoke == null) {
-                            ctx.objects.put(delegateInvokeKey, new WeakReference(delegateInvoke));
-                    	} else {
-                    		// use the cached lookup
-                            delegateInvoke= oldDelegateInvoke;
-                    	}
+                        synchronized (this) {
+                            // ensure check and adding to the cache is only done once
+                            // at a time
+                            Object oldDelegateInvoke= null;
+                            WeakReference cachedReference= ctx.objects.get(delegateInvokeKey);
+                            if (cachedReference != null) {
+                                oldDelegateInvoke= cachedReference.get();
+                            }
+                            if (oldDelegateInvoke == null) {
+                                ctx.objects.put(delegateInvokeKey, new WeakReference(delegateInvoke));
+                            } else {
+                                // use the cached lookup
+                                delegateInvoke= oldDelegateInvoke;
+                            }
+                        }
 
-                    	if (!strongReferences.containsKey(delegateInvoke.hashCode())) {
-                    		// no strong reference set yet? -> set
-                    		strongReferences.put(delegateInvoke.hashCode(), delegateInvoke);
-                    	}
+                        if (!serviceObjects.containsKey(delegateInvoke.hashCode())) {
+                            // no strong reference set yet? -> set
+                        	serviceObjects.put(delegateInvoke.hashCode(), delegateInvoke);
+                        }
                         buffer= Serializer.representationOf(delegateInvoke);
                     } else if (null != delegateCl) {
                         Thread currentThread= Thread.currentThread();

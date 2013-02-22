@@ -27,8 +27,6 @@ public class InvocationServerHandler extends ServerHandler {
 
         Serializer.registerMapping(EJBHome.class, new Invokeable<String, EJBHome>() {
             public String invoke(EJBHome p, Object arg) throws Exception {
-                //ctx.objects.put(p.hashCode(), new WeakReference(p));
-                
                 // Find out the correct interface
                 Class ejbInterface= null;
                 for (Class iface: p.getClass().getInterfaces()) {
@@ -52,8 +50,6 @@ public class InvocationServerHandler extends ServerHandler {
         }
         Serializer.registerMapping(EJBObject.class, new Invokeable<String, EJBObject>() {
             public String invoke(EJBObject p, Object arg) throws Exception {
-                //ctx.objects.put(p.hashCode(), new WeakReference(p));
-                
                 // Find out the correct interface
                 Class ejbInterface= null;
                 for (Class iface: p.getClass().getInterfaces()) {
