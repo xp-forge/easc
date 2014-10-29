@@ -234,7 +234,7 @@
       <arg value="-Durl=${dist.repo.url}"/>
       <arg value="-DrepositoryId=${dist.repo.id}"/>
       <arg value="-DuniqueVersion=false"/>
-      <arg value="-DpomFile=pom-jar.xml"/>
+      <arg value="-DpomFile=pom-sar.xml"/>
       <arg value="-Dfile=${dist.dir}/${dist.name}-${dist.version}.jar"/>
     </artifact:mvn>
   </target>
