@@ -4,7 +4,7 @@
  !
  ! $Id: build.xml 12460 2008-09-05 16:47:55Z friebe $
  !-->
-<project default="usage">
+<project name="EASC" default="usage" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
   <property name="build.srcdir" value="src"/>
   <property name="build.destdir" value="build"/>
   <property name="build.compiler" value="javac1.5"/>
@@ -13,6 +13,8 @@
   <property name="dist.resourcesdir" value="resources"/>
   <property name="dist.name" value="xp-easc"/>
   <property name="dist.version" value="1.8"/>
+  <property name="dist.repo.url" value=""/>
+  <property name="dist.repo.id" value=""/>
   
   <path id="classpath.build">
     <pathelement path="${classpath}"/>
@@ -86,8 +88,12 @@
 
 - jboss-sar
   Creates a JBoss SAR (Service Application Archive)
+
 - client-jar
   Creates the client jar for EASC communication
+
+- jar
+  Creates a JAR (Java Archive)
     </echo>
   </target>
 
@@ -207,6 +213,48 @@
     </jar>
   </target>
 	
+  <!-- JAR -->
+  <target name="jar" depends="compile">
+    <echo>===&gt; Creating Java Archive</echo>
+
+    <mkdir dir="${dist.dir}"/>
+
+    <!-- Clean up first -->
+    <delete>
+	  <fileset dir="${dist.dir}" includes="**/*"/>
+    </delete>
+
+    <!-- Generate JAR -->
+    <jar jarfile="${dist.dir}/${dist.name}-${dist.version}.jar">
+      <zipfileset dir="${dist.resourcesdir}" includes="easc-default.keystore" prefix="resources"/>
+      <fileset dir="${build.destdir}" includes="net/xp_framework/easc/**"/>
+    </jar>
+  </target>
+
+  <target name="deploy-jboss-sar" depends="jboss-sar">
+    <artifact:mvn>
+      <arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file"/>
+      <arg value="-Durl=${dist.repo.url}"/>
+      <arg value="-DrepositoryId=${dist.repo.id}"/>
+      <arg value="-DuniqueVersion=false"/>
+      <arg value="-DpomFile=pom-sar.xml"/>
+      <arg value="-Dfile=${dist.dir}/${dist.name}-${dist.version}.jar"/>
+    </artifact:mvn>
+  </target>
+
+  <target name="deploy-jar" depends="jar">
+    <artifact:mvn>
+      <arg value="org.apache.maven.plugins:maven-deploy-plugin:2.6:deploy-file"/>
+      <arg value="-Durl=${dist.repo.url}"/>
+      <arg value="-DrepositoryId=${dist.repo.id}"/>
+      <arg value="-DuniqueVersion=false"/>
+      <arg value="-DpomFile=pom-jar.xml"/>
+      <arg value="-Dfile=${dist.dir}/${dist.name}-${dist.version}.jar"/>
+    </artifact:mvn>
+  </target>
+
+  <target name="deploy" depends="deploy-jboss-sar,deploy-jar"/>
+
 	<!-- JBoss SAR -->
 	  <target name="client-jar" depends="compile">
 	    <echo>===&gt; Creating jarfile for java to java EASC communication</echo>
